@@ -20,6 +20,10 @@ extern nodestr_id;
 extern leafdstr_id;
 extern leafsstr_id;
 extern bversion;
+extern node_count;
+extern node_base;
+extern node_size;
+extern node_off;
 
 static streacmp(str, ea) {
 	auto i;
@@ -28,8 +32,8 @@ static streacmp(str, ea) {
 
 	len = strlen(str);
 
-	for (i = 0; i < strlen; i++) {
-		val = get_wide_byte(ea + i) - str[i];
+	for (i = 0; i < len; i++) {
+		val = get_wide_byte(ea + i) - ord(str[i]);
 		if (val != 0) {
 			return val;
 		}
@@ -63,10 +67,24 @@ static isstring(ea, len) {
 }
 
 static checkBtreeVersion(void) {
-	if (streacmp("B-tree v 1.6 (C) Pol 1990", 19) == 0) {
+	if (streacmp("B-tree v 1.5 (C) Pol 1990", 13) == 0) {
+		bversion = 15;
+		node_count = 2;
+		node_base = 4;
+		node_size = 4;
+		node_off = 2;
+	} else if (streacmp("B-tree v 1.6 (C) Pol 1990", 19) == 0) {
 		bversion = 16;
+		node_count = 4;
+		node_base = 6;
+		node_size = 6;
+		node_off = 4;
 	} else if (streacmp("B-tree v2", 19) == 0) {
 		bversion = 20;
+		node_count = 4;
+		node_base = 6;
+		node_size = 6;
+		node_off = 4;
 	} else {
 		bversion = -1;
 	}
@@ -102,7 +120,10 @@ static createStructs(void) {
 	auto str_id;
 
 	str_id = add_struc(0, "NODE", 0);
-	if (bversion == 16) {
+	if (bversion == 15) {
+		add_struc_member(str_id, "type", -1, FF_BYTE | FF_DATA, -1, 1);
+		add_struc_member(str_id, "count", -1, FF_BYTE | FF_DATA, -1, 1);
+	} else if (bversion == 16) {
 		add_struc_member(str_id, "type", -1, FF_BYTE | FF_DATA, -1, 1);
 		add_struc_member(str_id, "count", -1, FF_BYTE | FF_DATA, -1, 1);
 		add_struc_member(str_id, "reserved", -1, FF_WORD | FF_DATA, -1, 2);
@@ -137,12 +158,13 @@ static addNodes(count) {
 
 	for (i = 0; i < count - 1; i++) {
 		base = (i * 0x2000) + 0x2000;
-		val = get_wide_word(base + 4);
+		val = get_wide_word(base + node_count);
 		print(sprintf("Add %i nodes at PAGE%03i", val, i));
 		for (j = 0; j < val; j++) {
-			create_struct(base + j * 6 + 6, -1, "NODE");
-			loff = get_wide_word(base + j * 6 + 10);
-			if (bversion == 16) {
+			create_struct(base + j * node_size + node_base, -1, "NODE");
+			set_array_params(base + j * node_size + node_base, 0, 16, 2);
+			loff = get_wide_word(base + j * node_size + node_base + node_off);
+			if (bversion <= 16) {
 				loff++;
 			}
 			len = get_wide_word(base + loff);
