@@ -35,7 +35,11 @@ static main(void) {
 		return;
 	}
 
-	for (i = 0; i < len; i = i + 1) {
+	for (i = 0; i < (len >> 2); i++) {
+		writelong(fd, Dword(addr), 0);
+		addr = addr + 4;
+	}
+	for (i = 0; i < (len & 3); i++) {
 		fputc(Byte(addr++), fd);
 	}
 
