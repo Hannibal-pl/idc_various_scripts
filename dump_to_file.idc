@@ -24,7 +24,7 @@ static main(void) {
 	auto i;
 
 	addr = AskAddr(ScreenEA(), "Enter start address of dump");
-	len = AskLong(0, "Enter length of dump in bytes");
+	len = AskLong(NextNotTail(addr) - addr, "Enter length of dump in bytes");
 	file = AskFile(1, "*", "Enter dump filename");
 
 	print(sprintf("Dumping 0x%X bytes from 0x%08X to '%s' file", len, addr, file));
