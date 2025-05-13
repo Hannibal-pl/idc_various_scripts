@@ -1,0 +1,85 @@
+This file describe format used by "make_priv_sig.idc" and "apply_priv_sig.idc"
+scripts. They can be used to create signatures for functions named by user
+with long enough body to match them with high enough accuracy. Qualified
+functions are also searched for unambiguous "from cross references" and when
+they are named, those names are also saved.
+
+Signature file format was created to be hand modifable when necessery.
+
+Each line of file consist of colon (:) separated strings. First string encodes
+meaning of rest of them:
+
+line_format:param_0:param_1:...:param_N
+
+Following line formats are supported:
+
+
+	VERSION DESCRIPTION
+
+Version information. This entry must be always present and be first in file.
+
+line_format:			'v'
+param 0:			version (currently 1)
+param 1:			flags (currently none)
+param 2:			optional comment
+
+example:
+
+	v:1::This must be first entry in file.
+
+
+	FUNCTION SIGNATURES
+
+Function signatures. Those line must be placed before 'd' & 'c' line types as
+they referenced this one. At least each signature must be before any reference
+to it. Function must be in format suppored by IDA. Signature contain hex
+encoded bytes from beginning of the function. Each pair of hex digits are
+equivalent of one byte. If hex pair is replaced by two underscores (__) analog
+byte is skipped and not matched.
+
+line_format:			'f'
+param 0:			function name
+param 1:			hex encoded signature
+param 2:			optional comment
+
+
+exmaple:
+	f:strlen:53B8__002EF607FF7404__43EBF65BC3:No comment...
+
+
+	DATA XREFS
+
+Data cross referenced from funtions with matched signatures. When match
+function, and it contain references to named data, we can remember offset of
+this reference within function, and set name also to it.
+
+line_format:			'd'
+param 0:			orgin function name ('f' line)
+param 1:			offset within function of xref
+param 2:			name of xref
+param 3:			optional comment
+
+example:
+	d:atexit:15:__exit_func:
+
+
+	CALL XREFS
+
+Same as above, but for call and jump cross references.
+
+line_format:			'c'
+param 0:			orgin function name ('f' line)
+param 1:			offset within function of xref
+param 2:			name of xref
+param 3:			optional comment
+
+example:
+	d:strncpy:23:memcpy:This comment isn't get or set from IDA database.
+
+
+
+TODO:
+	Call cross references can be recursed. But this requires on "make" to
+remember already saved names from all passes to not do an infinite loop. Also
+recursion level must be save, as 'earlier' names must be applied in "restore"
+before 'late' ones.
