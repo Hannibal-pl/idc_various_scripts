@@ -38,15 +38,15 @@ static initGlobals(void) {
 	format_version = 1;	// fromat version in case of future improvements
 	is_debug = 1;		// enable debug messages
 
-	delete_array(get_array_id("VarSigArray")); // if we run again we must delete prevoius array (i case of existence)
-	delete_array(get_array_id("CallSigArray")); // if we run again we must delete prevoius array (i case of existence)
-	var_array = create_array("VarSigArray");
-	call_array = create_array("CallSigArray");
+	DeleteArray(GetArrayId("VarSigArray")); // if we run again we must delete prevoius array (i case of existence)
+	DeleteArray(GetArrayId("CallSigArray")); // if we run again we must delete prevoius array (i case of existence)
+	var_array = CreateArray("VarSigArray");
+	call_array = CreateArray("CallSigArray");
 }
 
 static cleanup(void) {
-	delete_array(get_array_id("VarSigArray")); // don't polute database
-	delete_array(get_array_id("CallSigArray"));
+	DeleteArray(GetArrayId("VarSigArray")); // don't polute database
+	DeleteArray(GetArrayId("CallSigArray"));
 }
 
 static strncmp(str1, str2, n) {
